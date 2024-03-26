@@ -1,0 +1,15 @@
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: aws-route53-exporter
+  labels:
+    name: aws-route53-exporter
+spec:
+  selector:
+    app: aws-route53-exporter
+  ports:
+    - name: http
+      protocol: TCP
+      port: 8000
+      targetPort: 8000
