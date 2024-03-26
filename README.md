@@ -1,7 +1,3 @@
-# aws-route53-exporter
-Prometheus exporter for AWS Route53 hosted zone records
-
-
 # AWS Route53 Exporter
 
 The AWS Route53 Exporter enables Prometheus to collect metrics regarding the number of records within AWS Route53 hosted zones. This tool is essential for administrators and DevOps engineers who need to monitor their DNS records for capacity planning and operational health.
