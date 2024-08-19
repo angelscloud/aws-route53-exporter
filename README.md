@@ -17,7 +17,7 @@ Before you begin, ensure you have Prometheus installed and running in your envir
 1. Clone this repository to your local machine or server where Prometheus is running:
 
     ```bash
-    git clone https://github.com/nexolabs/aws-route53-exporter.git
+    git clone https://github.com/angelscloud/aws-route53-exporter.git
     cd aws-route53-exporter
     ```
 

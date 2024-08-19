@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
         - name: aws-route53-exporter
-          image: ghcr.io/venomseven/aws-route53-exporter:latest
+          image: ghcr.io/angelscloud/aws-route53-exporter:latest
           imagePullPolicy: IfNotPresent
           env:
             - name: AWS_SECRET_ACCESS_KEY
