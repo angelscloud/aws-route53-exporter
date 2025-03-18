@@ -17,10 +17,13 @@ AWS_SESSION_TOKEN = os.environ.get('AWS_SESSION_TOKEN')
 rrset_limit_gauge = Gauge('route53_rrset_limit', 'The maximum number of record sets that can be created in the hosted zone', labelnames=['hosted_zone_name'])
 rrset_count_gauge = Gauge('route53_rrset_count', 'The current number of record sets in the hosted zone', labelnames=['hosted_zone_name'])
 
-# Add new Gauge metric for hosted zone quotas
+# Add new Gauge metrics for hosted zone quotas and usage
 hosted_zone_quota_gauge = Gauge('route53_hosted_zone_quota', 'The quota for the number of hosted zones that can be created', labelnames=['account'])
-# Add new Gauge metric for reusable delegation sets quota
+hosted_zone_usage_gauge = Gauge('route53_hosted_zone_usage', 'The current number of hosted zones being used', labelnames=['account'])
+
+# Add new Gauge metrics for reusable delegation sets quota and usage
 delegation_sets_quota_gauge = Gauge('route53_delegation_sets_quota', 'The quota for the number of reusable delegation sets that can be created', labelnames=['account'])
+delegation_sets_usage_gauge = Gauge('route53_delegation_sets_usage', 'The current number of reusable delegation sets being used', labelnames=['account'])
 
 def fetch_route53_limits():
     while True:
@@ -42,13 +45,15 @@ def fetch_route53_limits():
         # Get AWS account ID
         account_id = session.client('sts').get_caller_identity()['Account']
 
-        # Fetch hosted zone quota
+        # Fetch hosted zone quota and usage
         account_limit = client.get_account_limit(Type='MAX_HOSTED_ZONES_BY_OWNER')
         hosted_zone_quota_gauge.labels(account=account_id).set(account_limit['Limit']['Value'])
+        hosted_zone_usage_gauge.labels(account=account_id).set(account_limit['Count'])
 
-        # Fetch delegation sets quota
+        # Fetch delegation sets quota and usage
         delegation_sets_limit = client.get_account_limit(Type='MAX_REUSABLE_DELEGATION_SETS_BY_OWNER')
         delegation_sets_quota_gauge.labels(account=account_id).set(delegation_sets_limit['Limit']['Value'])
+        delegation_sets_usage_gauge.labels(account=account_id).set(delegation_sets_limit['Count'])
 
         time.sleep(300)
 
