@@ -19,6 +19,8 @@ rrset_count_gauge = Gauge('route53_rrset_count', 'The current number of record s
 
 # Add new Gauge metric for hosted zone quotas
 hosted_zone_quota_gauge = Gauge('route53_hosted_zone_quota', 'The quota for the number of hosted zones that can be created', labelnames=['account'])
+# Add new Gauge metric for reusable delegation sets quota
+delegation_sets_quota_gauge = Gauge('route53_delegation_sets_quota', 'The quota for the number of reusable delegation sets that can be created', labelnames=['account'])
 
 def fetch_route53_limits():
     while True:
@@ -37,9 +39,16 @@ def fetch_route53_limits():
         rrset_limit_gauge.labels(hosted_zone_name=hosted_zone_name).set(response['Limit']['Value'])
         rrset_count_gauge.labels(hosted_zone_name=hosted_zone_name).set(response['Count'])
 
+        # Get AWS account ID
+        account_id = session.client('sts').get_caller_identity()['Account']
+
         # Fetch hosted zone quota
-        account_limit = client.get_account_limit(Type='MAX_HOSTED_ZONES')
-        hosted_zone_quota_gauge.labels(account=session.client('sts').get_caller_identity()['Account']).set(account_limit['Limit']['Value'])
+        account_limit = client.get_account_limit(Type='MAX_HOSTED_ZONES_BY_OWNER')
+        hosted_zone_quota_gauge.labels(account=account_id).set(account_limit['Limit']['Value'])
+
+        # Fetch delegation sets quota
+        delegation_sets_limit = client.get_account_limit(Type='MAX_REUSABLE_DELEGATION_SETS_BY_OWNER')
+        delegation_sets_quota_gauge.labels(account=account_id).set(delegation_sets_limit['Limit']['Value'])
 
         time.sleep(300)
 
