@@ -17,6 +17,9 @@ AWS_SESSION_TOKEN = os.environ.get('AWS_SESSION_TOKEN')
 rrset_limit_gauge = Gauge('route53_rrset_limit', 'The maximum number of record sets that can be created in the hosted zone', labelnames=['hosted_zone_name'])
 rrset_count_gauge = Gauge('route53_rrset_count', 'The current number of record sets in the hosted zone', labelnames=['hosted_zone_name'])
 
+# Add new Gauge metric for hosted zone quotas
+hosted_zone_quota_gauge = Gauge('route53_hosted_zone_quota', 'The quota for the number of hosted zones that can be created', labelnames=['account'])
+
 def fetch_route53_limits():
     while True:
         session = Session(aws_access_key_id=AWS_ACCESS_KEY_ID,
@@ -27,12 +30,16 @@ def fetch_route53_limits():
         hosted_zone_details = client.get_hosted_zone(Id=HOSTED_ZONE_ID)
         hosted_zone_name = hosted_zone_details['HostedZone']['Name'][:-1]
 
-
+        # Fetch record set limits
         limit_type = 'MAX_RRSETS_BY_ZONE'
         response = client.get_hosted_zone_limit(HostedZoneId=HOSTED_ZONE_ID, Type=limit_type)
 
         rrset_limit_gauge.labels(hosted_zone_name=hosted_zone_name).set(response['Limit']['Value'])
         rrset_count_gauge.labels(hosted_zone_name=hosted_zone_name).set(response['Count'])
+
+        # Fetch hosted zone quota
+        account_limit = client.get_account_limit(Type='MAX_HOSTED_ZONES')
+        hosted_zone_quota_gauge.labels(account=session.client('sts').get_caller_identity()['Account']).set(account_limit['Limit']['Value'])
 
         time.sleep(300)
 
